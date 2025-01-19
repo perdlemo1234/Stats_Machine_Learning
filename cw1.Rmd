@@ -4,26 +4,110 @@ output: html_document
 date: "2025-01-17"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Problem 2 Practical ( 20 marks )
+
+1.  **To begin, we are going to investigate the linear model:**
+
+    -   *By conducting your own research, describe the predictors included in each of the following lm formulas. Do any of the below models give the same parameter estimates? If so, which? **(2 marks)***
+
+        ![](images/ques%201.png)
+
+        Model (1) and (3) share same parameter estimates. Both contain the intercept term as well as DL and PCT as predictors. Model (4) and (5) share same parameter estimates. The I(DL\^2) in (5) is treated as a mathematical term as it isolates the contents of I(...).
+
+    -   *Using only base R commands, write a function my_lm. Your function must:*
+
+        -   *take as input two data frames X and Y , representing a design matrix and response vector respectively,*
+        -   *return as output the* $\beta^{OLS}$ *estimator as a matrix,*
+        -   *check if* $X$ *includes an intercept column. If* $X$ *does not include an intercept column, your code must add one to the model. You may assume for this part of the exercise that* $X$ *does not contain categorical data.*
+
+        *You may assume for this part of the exercise that* $X$ *does not contain categorical data.* ***( 4 marks )***
+
+```{r function}
+my_lm <- function(X,y){
+  # Check if X has a column which contains entirely of ones 
+  if (!any(colSums(X == 1) == nrow(X))){
+    X <- cbind(Intercept = 1, X)
+  }
+  
+  #Compute OLS estimator
+  beta_hat <- solve(t(X) %*% X) %*% t(X) %*% y
+  
+  return(beta_hat)
+}
 ```
 
-## R Markdown
+-   *Using the continuous variables in the* $pets$ *dataset, write code demonstrating that your function* my_lm *gives the same output as* $lm$*. **(1 mark)***
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r comparing}
+#continuous random variables are all predictors except PT 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+X <- as.matrix(pets[, !colnames(pets) %in% c("PT","Prod")])
+y <- as.matrix(pets[,"Prod"])
 
-```{r cars}
-summary(cars)
+#Using my_lm function 
+beta_hat_my_lm <- my_lm(X,y)
+
+#Use built in lm function 
+lm_model <- lm(Prod ~ NTT + PCT + EW + DL, data=pets)
+beta_hat_lm <- coef(lm_model)
+
+# Print results and compare 
+print("Custom my_lm coefficients:")
+print(beta_hat_my_lm)
+
+print("Built-in lm coefficients:")
+print(beta_hat_lm)
+
+#Both coefficients are same. Hence, proven.
 ```
 
-## Including Plots
+-   *The term “one-hot encoding" refers to the act of converting a categorical predictor Z to a binary representation, as shown below:*
 
-You can also embed plots, for example:
+![](images/ques%201%20d)-01.png){width="178"}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```         
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+-   *In practice, whenever you enter a factor into lm, the factor is being one-hot-encoded in this way behind the scenes. Write your own function which takes in a dataframe* $X$ *and checks for non-numeric columns of X. If your code encounters a column with non-numeric data it must do the following: (i) remove the column from X, (ii) one-hot encode the column, (iii) add the one-hot encoded data back into X. **( 3 marks )***
+
+-   <div>
+
+    ```{r function one-hot encoding}
+    one_hot_encoding <- function(X) {
+      # Loop through all columns in X
+      for (col_name in colnames(X)) {
+        # Check if the column is non-numeric
+        if (!is.numeric(X[[col_name]])) {
+          # Extract all unique categorical values
+          unique_values <- unique(X[[col_name]])
+          
+          # Create one-hot encoded columns for each unique value
+          for (val in unique_values) {
+            # Generate a new column: 1 where value matches, 0 otherwise
+            new_col <- as.numeric(X[[col_name]] == val)
+            # Create column names
+            col_name_encoded <- paste(col_name, val, sep = "_")
+            # Add new column to X
+            X[[col_name_encoded]] <- new_col
+          }
+          
+          # Remove the original non-numeric column
+          X[[col_name]] <- NULL
+        }
+      }
+      
+      return(X)
+    }
+
+    X <- data.frame(pets[, !colnames(pets) %in% c("Prod")])
+    one_hot_encoding(X)
+    ```
+
+    </div>
+
+2)  *For each of the following, write R code which runs the specified model and plots the model’s predicted values. Each model must use the knots 1.5, 3.5 and 6:*
+    -   *Using* $lm$ *, fit a piecewise linear model with* $PCT$ *as a predictor and* $Prod$ as a response. **(1 mark)**
+```{r piecewise linear model}
+
+
+```
