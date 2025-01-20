@@ -106,8 +106,171 @@ print(beta_hat_lm)
     </div>
 
 2)  *For each of the following, write R code which runs the specified model and plots the model’s predicted values. Each model must use the knots 1.5, 3.5 and 6:*
+
     -   *Using* $lm$ *, fit a piecewise linear model with* $PCT$ *as a predictor and* $Prod$ as a response. **(1 mark)**
-```{r piecewise linear model}
 
+    ```{r piecewise linear model}
+    # Define the knots
+    knots <- c(1.5, 3.5, 6)
 
+    # Create the piecewise terms
+    pets$piecewise_1 <- pmax(0, pets$PCT - knots[1]) 
+    pets$piecewise_2 <- pmax(0, pets$PCT - knots[2]) 
+    pets$piecewise_3 <- pmax(0, pets$PCT - knots[3]) 
+
+    # Fit the piecewise linear model
+    model <- lm(Prod ~ PCT + piecewise_1 + piecewise_2 + piecewise_3, data = pets)
+
+    # Generate predicted values
+    pets$Predicted <- predict(model)
+
+    # Sort the data by PCT for proper line plotting
+    pets <- pets[order(pets$PCT), ]
+
+    # Plot observed and predicted values as points
+    plot(pets$PCT, pets$Predicted, pch = 20, col = "red", cex = 1.5,
+         main = "Piecewise Linear Model - Predicted Values",
+         xlab = "PCT", ylab = "Predicted Prod",
+         xlim = c(min(pets$PCT), max(pets$PCT)), ylim = c(min(pets$Predicted), max(pets$Predicted)))
+
+    # Add vertical dashed lines for knots
+    abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
+    ```
+
+-   *Using* $lm$ *and functions from the* $splines$ *package, fit a linear spline model with* $PCT$ *as a predictor and* $Prod$ *as a response. **(1 mark)***
+
+```{r linear spline}
+library(splines)
+
+# Define knots for the spline
+knots <- c(1.5, 3.5, 6)
+
+# Fit the linear spline model using bs() for B-splines
+spline_model <- lm(Prod ~ bs(PCT, knots = knots, degree = 1), data = pets)
+
+# Predicted values
+pets$Predicted_linear_spline <- predict(spline_model)
+
+# Add the spline fit (predicted values)
+plot(pets$PCT, pets$Predicted_linear_spline, col = "red", lwd = 2,main = "Linear Spline Model - Predicted Values", xlab="PCT", ylab="Predicted Prod")
+
+# Add vertical dashed lines for knots
+abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
+```
+
+-   *Using* $lm$ *and functions from the* $splines$ *package, fit a cubic spline model with* $PCT$ *as a predictor and Prod as a response.* **(1 mark)**
+
+```{r cublic spline}
+# Define knots for the spline
+knots <- c(1.5, 3.5, 6)
+
+# Fit the linear spline model using bs() for B-splines
+spline_model <- lm(Prod ~ bs(PCT, knots = knots, degree = 3), data = pets)
+
+# Predicted values
+pets$Predicted_cubic_spline <- predict(spline_model)
+
+# Add the spline fit (predicted values)
+plot(pets$PCT, pets$Predicted_cubic_spline, col = "red", lwd = 2,main = "Cubic Spline Model - Predicted Values", xlab="PCT", ylab="Predicted Prod")
+
+# Add vertical dashed lines for knots
+abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
+
+```
+
+-   *Using* $lm$ *and functions from the* $splines$ *package, fit a natural cubic spline model with* $PCT$ *as a predictor and* $Prod$ *as a response. **(1 mark)***
+
+```{r natural cubic spline}
+# Define knots for the spline
+knots <- c(1.5, 3.5, 6)
+
+# Fit the linear spline model using bs() for B-splines
+spline_model <- lm(Prod ~ ns(PCT, knots = knots), data = pets)
+
+# Predicted values
+pets$Predicted_natural_cubic_spline <- predict(spline_model)
+
+# Add the spline fit (predicted values)
+plot(pets$PCT, pets$Predicted_natural_cubic_spline, col = "red", lwd = 2,main = "Natural Cubic Spline Model - Predicted Values", xlab="PCT", ylab="Predicted Prod")
+
+# Add vertical dashed lines for knots
+abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
+
+```
+
+</div>
+
+3)  *In part (ii), we used splines to model the nonlinear relationship between* $Prod$ *and* $PCT$*. In this question, we shall continue to explore this relationship, but using different methods.*
+
+    -   *Based on what we have seen in class, suggest a different approach which could be used for modeling the relationship between* $Prod$ *and* $PCT$*. Use an appropriate R package to fit your proposed model and make a plot of the fitted values. **(2 marks)***
+
+    ```{r}
+    # We can use Generalised Additive Models(GAM)
+    library(mgcv)
+
+    # Fit a GAM with a smooth term for PCT
+    gam_model <- gam(Prod ~ s(PCT, k=6), data = pets)
+
+    summary(gam_model)
+
+    pets$Fitted_gam <- predict(gam_model)
+
+    # Add the spline fit (predicted values)
+      plot(pets$PCT, pets$Fitted_gam, col = "red", lwd = 2,main = "GAM - Predicted Values", xlab="PCT", ylab="Predicted Prod")
+
+    ```
+
+-   *Modify your solution to (a) to incorporate the* $Pet Type$ *variable in your model. Then, create separate plots of the fitted values for each type of pet. **(2 marks)***
+
+    ```{r}
+    library(ggplot2)
+
+    # Fit a GAM with an interaction between PCT and PT
+    gam_model <- gam(Prod ~ s(PCT, k=10 , bs="cs") + PT, data = pets)
+
+    # Generate fitted values
+    pets$Fitted <- predict(gam_model)
+
+    # Create separate plots for each pet type
+    ggplot(pets, aes(x = PCT, y = Fitted, color = PT)) +
+    geom_line(size = 1) +
+    geom_point(aes(y = Prod), size = 2, shape = 4) +
+    facet_wrap(~PT, scales = "free") +
+    theme_minimal() +
+    labs(
+    title = "GAM Fitted Values by Pet Type",
+    x = "PCT",
+    y = "Prod",
+    color = "Pet Type"
+    ) +
+    theme(legend.position = "none")
+
+    ```
+
+<!-- -->
+
+-   *Suppose that instead of Prod, we wished to model NTT as the response variable. In one sentence, describe how you would modify your solution to part (b) to reflect this change. Provide the updated code (including plots) reflecting this substitution. **(2 marks)***
+
+I changed all Prod terms to NTT and adjusted all axis labels.
+
+```{r}
+# Fit a GAM with an interaction between PCT and PT
+    gam_model <- gam(NTT ~ s(PCT, k=10 ,bs="cs") + PT, data = pets)
+
+    # Generate fitted values
+    pets$Fitted_New <- predict(gam_model)
+
+    # Create separate plots for each pet type
+    ggplot(pets, aes(x = NTT, y = Fitted, color = PT)) +
+    geom_line(size = 1) +
+    geom_point(aes(y = Prod), size = 2, shape = 4) +
+    facet_wrap(~PT, scales = "free") +
+    theme_minimal() +
+    labs(
+    title = "GAM Fitted Values by Pet Type",
+    x = "PCT",
+    y = "NTT",
+    color = "Pet Type"
+    ) +
+    theme(legend.position = "none")
 ```
