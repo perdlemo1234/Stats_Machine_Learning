@@ -1,6 +1,8 @@
 ---
-title: "cw1"
-output: html_document
+title: "Regression Coursework 1"
+output:
+  pdf_document: default
+  html_document: default
 date: "2025-01-17"
 ---
 
@@ -12,7 +14,7 @@ date: "2025-01-17"
 
         ![](images/ques%201.png)
 
-        Model (1) , (3) are the same because the intercept is implicitly included in Model (1), whereas Model (3) is explicitly included. Model (2) explicitly removes the intercept because of 0, therefore parameter estimates for DL and PCT change because the model assumes the line passes through the origin. Model (4) share same parameter estimates as well with Model (1) and (3), because DL is demeaned and rescaled, therefore having no effect, and it contains the intercept term as well as DL and PCT as predictors. Model (5) is not the same because the I() function is applied and R explicitly includes the quadratic effect of DL, making it distinct from other models. Model (6) differs from rest because poly() creates orthogonal basis functions, meaning the polynomial terms for DL (linear and quadratic) are uncorrelated.
+        Model (1) , (3) are the same because the intercept is implicitly included in Model (1), whereas Model (3) is explicitly included. Model (2) explicitly removes the intercept because of 0, therefore parameter estimates for DL and PCT change because the model assumes the line passes through the origin. Model (4) shares same parameter estimates and intercept terms with Model (1) and (3), because DL is demeaned and rescaled, therefore having no effect, Model (4) contains the intercept term , DL and PCT as predictors. Model (5) is not the same because the I() function is applied and R explicitly includes the quadratic effect of DL, rather than begin treated as special formula operators. Model (6) differs from the rest because poly() creates orthogonal basis functions, meaning the polynomial terms for DL (linear and quadratic) are uncorrelated.
 
     -   *Using only base R commands, write a function my_lm. Your function must:*
 
@@ -23,6 +25,8 @@ date: "2025-01-17"
         *You may assume for this part of the exercise that* $X$ *does not contain categorical data.* ***( 4 marks )***
 
 ```{r function}
+load(file = "C:/Users/tanwe/OneDrive/Documents/Stats_Machine_Learning/.RData")
+
 my_lm <- function(X,y){
   # Check if X has a column which contains entirely of ones 
   if (!any(colSums(X == 1) == nrow(X))){
@@ -52,25 +56,23 @@ lm_model <- lm(Prod ~ NTT + PCT + EW + DL, data=pets)
 beta_hat_lm <- coef(lm_model)
 
 # Print results and compare 
-print("Custom my_lm coefficients:")
+print("Manually generated my_lm coefficients:")
 print(beta_hat_my_lm)
 
-print("Built-in lm coefficients:")
+print("Built-in R lm coefficients:")
 print(beta_hat_lm)
 
-#Both coefficients are same. Hence, proven.
+#All coefficients are the same for both models. Hence, proven.
 ```
 
 -   *The term “one-hot encoding" refers to the act of converting a categorical predictor Z to a binary representation, as shown below:*
 
-![](images/ques%201%20d)-01.png){width="178"}
+![](images/clipboard-433858074.png)
 
 ```         
 ```
 
 -   *In practice, whenever you enter a factor into lm, the factor is being one-hot-encoded in this way behind the scenes. Write your own function which takes in a dataframe* $X$ *and checks for non-numeric columns of X. If your code encounters a column with non-numeric data it must do the following: (i) remove the column from X, (ii) one-hot encode the column, (iii) add the one-hot encoded data back into X. **( 3 marks )***
-
-    For some of the columns generated in the middle, are for the next parts of the questions.
 
 -   <div>
 
@@ -86,15 +88,13 @@ print(beta_hat_lm)
             X[[col_name_encoded]] <- new_col
           }
           
-         
           X[[col_name]] <- NULL  # Remove the original non-numeric column
         }
       }
-      
       return(X)
     }
 
-    X <- data.frame(pets[, !colnames(pets) %in% c("Prod")])
+    X <- head(data.frame(pets[, !colnames(pets) %in% c("Prod")]))
     one_hot_encoding(X)
     ```
 
@@ -123,7 +123,7 @@ print(beta_hat_lm)
     pets <- pets[order(pets$PCT), ]
 
     # Plot observed and predicted values as points
-    plot(pets$PCT, pets$Predicted, pch = 20, col = "red", cex = 1.5,
+    plot(pets$PCT, pets$Predicted, lwd=2, col = "red",
          main = "Piecewise Linear Model - Predicted Values",
          xlab = "PCT", ylab = "Predicted Prod",
          xlim = c(min(pets$PCT), max(pets$PCT)), ylim = c(min(pets$Predicted), max(pets$Predicted)))
@@ -168,7 +168,7 @@ spline_model <- lm(Prod ~ bs(PCT, knots = knots, degree = 3), data = pets)
 pets$Predicted_cubic_spline <- predict(spline_model)
 
 # Add the spline fit (predicted values)
-plot(pets$PCT, pets$Predicted_cubic_spline, col = "red", lwd = 2,main = "Cubic Spline Model - Predicted Values", xlab="PCT", ylab="Predicted Prod")
+plot(pets$PCT, pets$Predicted_cubic_spline, col = "red", lwd = 2, main = "Cubic Spline Model - Predicted Values", xlab="PCT", ylab="Predicted Prod")
 
 # Add vertical dashed lines for knots
 abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
@@ -192,7 +192,6 @@ plot(pets$PCT, pets$Predicted_natural_cubic_spline, col = "red", lwd = 2,main = 
 
 # Add vertical dashed lines for knots
 abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
-
 ```
 
 </div>
@@ -230,8 +229,8 @@ abline(v = knots, col = "darkgreen", lty = 2, lwd = 1.5)
 
     # Create separate plots for each pet type
     ggplot(pets, aes(x = PCT, y = Fitted, color = PT)) +
-    geom_line(size = 1) +
-    geom_point(aes(y = Prod), size = 2, shape = 4) +
+    geom_line(size = 0.8) +
+    geom_point(aes(y = Prod), size = 2.5, shape = 4) +
     facet_wrap(~PT, scales = "free") +
     theme_minimal() +
     labs(
@@ -259,7 +258,7 @@ I changed all Prod terms to NTT and adjusted all axis labels.
 
     # Create separate plots for each pet type
     ggplot(pets, aes(x = NTT, y = Fitted, color = PT)) +
-    geom_line(size = 1) +
+    geom_line(size = 0.65) +
     geom_point(aes(y = Prod), size = 2, shape = 4) +
     facet_wrap(~PT, scales = "free") +
     theme_minimal() +
