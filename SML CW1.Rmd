@@ -251,22 +251,21 @@ I changed all Prod terms to NTT and adjusted all axis labels.
 
 ```{r}
 # Fit a GAM with an interaction between PCT and PT
-    gam_model <- gam(NTT ~ s(PCT, k=10 ,bs="cs") + PT, data = pets)
+gam_model <- gam(NTT ~ s(PCT, k = 10, bs = "cs") + PT, data = pets)
 
-    # Generate fitted values
-    pets$Fitted_New <- predict(gam_model)
+# Generate fitted values
+pets$Fitted_New <- predict(gam_model)
 
-    # Create separate plots for each pet type
-    ggplot(pets, aes(x = NTT, y = Fitted, color = PT)) +
-    geom_line(size = 0.65) +
-    geom_point(aes(y = Prod), size = 2, shape = 4) +
-    facet_wrap(~PT, scales = "free") +
-    theme_minimal() +
-    labs(
+# Plot fitted values only as points
+ggplot(pets, aes(x = PCT, y = Fitted_New, color = PT)) +
+  geom_point(size = 1.5, shape = 4) +  
+  facet_wrap(~PT, scales = "free") +
+  theme_minimal() +
+  labs(
     title = "GAM Fitted Values by Pet Type",
     x = "PCT",
-    y = "NTT",
+    y = "Fitted NTT",
     color = "Pet Type"
-    ) +
-    theme(legend.position = "none")
+  ) +
+  theme(legend.position = "none")
 ```
