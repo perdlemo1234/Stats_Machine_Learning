@@ -1,6 +1,6 @@
 ---
 title: "SML - CW2 - R"
-author: "Wen Hans Tan"
+author: "Wen Hans Tan & Eirshad Fahim"
 date: "2025-02-30"
 output:
   pdf_document: default
