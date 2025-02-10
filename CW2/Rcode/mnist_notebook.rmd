@@ -1,0 +1,230 @@
+---
+title: "SML - CW2 - R"
+author: "Wen Hans Tan"
+date: "2025-02-30"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# The MNIST Dataset
+
+In this assessment, we are going to investigate one of the most famous
+datasets used for machine learning; the MNIST (Modified National
+Institute of Standards and Technology) database. The full dataset
+consists of 70,000 training images of hand-written digits between 0 and
+9. However, we shall only use a sample of 1,500 of these digits. The
+below code will load in the MNIST dataset.
+
+```{r}
+# Load the dataset
+load("digit_img.RData")
+```
+
+We shall also load in some support functions which will be useful for
+working with this dataset.
+
+```{r}
+source("digit_utils.R")
+```
+
+You will now find that your workspace contains a variable named
+`digit_img`.
+
+`digit_img` is a 256 × 1500 matrix, where the first dimension is “space”
+unwrapped (i.e. the images of handwritten digits are 16×16 = 256 arrays
+of pixels), and the second dimension are the 1500 images. We shall treat
+the first 1000 as your training data and the remaining 500 as test data.
+
+```{r}
+# Get training data
+training_data <- t(digit_img[, 1:1000])
+
+# Get testing data
+testing_data <- t(digit_img[, 1001:1500])
+```
+
+To help you understand the data, we have provided the `display_digit`
+function. For example, to see the first 100 digits...
+
+```{r}
+display_digit(digit_img[,1:100])
+```
+
+The `digit_lab` variable is a length 1500 label vector telling you the
+label (true identity) of the digit, one of 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+(10 means “zero”, so we convert it below).
+
+```{r}
+# Load the labels
+load("digit_lab.RData")
+
+# Replace elements equal to 10 with 0 (it's easier to view this way)
+digit_lab[digit_lab == 10] <- 0
+```
+
+You can view the labels alongside the images using the `display_digit`
+function as follows:
+
+```{r}
+display_digit(digit_img[,1:100],digit_lab[,1:100])
+```
+
+The below code will split the labels into training and testing for you.
+
+```{r}
+# Get training labels
+training_labels <- t(digit_lab[, 1:1000])
+
+# Get testing labels
+testing_labels <- t(digit_lab[, 1001:1500])
+```
+
+## Practical
+
+### Part (i)
+
+Which preprocessing steps (if any) might you consider applying to this
+dataset before writing your answers to part (ii)? Your answer should be
+at most three sentences (no code!). *In parts (ii) and (iii), you may
+assume we have preprocessed the data for you. **(3 marks)***
+
+Remove missing data and outliers should be considered standard as it is
+sensitive for each classification task. Convert all labels into factors
+so that R can process the values and re-scale or normalise all
+continuous data because classification algorithms rely on distance
+metrics which are sensitive to the magnitude of the data. Lastly, we
+check correlation between factors ; a higher correlation means that it
+is difficult to estimate the individual contribution into estimating the
+outcome.
+
+## Classification Task
+
+For part (ii) of Problem 2 on the assignment, your task is to classify
+the handwritten digit images by predicting the labels (true digit) from
+the features (images). For each classification method listed in the
+following sections, you must do the following:
+
+-   Use the suggested functions to train your model.
+-   Generate a confusion matrix and calculate the classification
+    accuracy using the `confusionMatrix` function from the `caret`
+    package.
+-   Visualize 100 test images along with their predicted labels using
+    the `display_digit` function.
+
+### K-Nearest Neighbours
+
+Using the training data and labels, apply the `knn` function from the
+`caret` package to perform K-Nearest Neighbours classification on the
+dataset. Evaluate the model’s performance as described above.
+
+```{r}
+library(class)
+library(ggplot2)
+library(lattice)
+library(caret)
+# Alter k-value
+k <- 9
+testing_labels <- factor(testing_labels)
+
+# Predict labels using knn function 
+pred_knn <- knn(train = training_data, 
+            test = testing_data, 
+            cl = training_labels, 
+            k = k)
+
+# Create a confusion matrix
+conf_Matrix <- confusionMatrix(pred_knn, testing_labels)
+
+# Display the result
+print(conf_Matrix)
+
+accuracy <- conf_Matrix$overall["Accuracy"]
+accuracy
+```
+
+```{r}
+display_digit(digit_img[,1001:1100],pred_knn)
+```
+
+### Naive Bayes
+
+Using the training data and labels, apply the `naiveBayes` function from
+the `e1071` package to perform Naive Bayes classification on the
+dataset. Evaluate the model’s performance as described above.
+
+```{r}
+library(e1071)
+testing_labels <- factor(testing_labels)
+training_labels <- factor(training_labels)
+
+train_df <- data.frame(training_data, label = training_labels)
+test_df <- data.frame(testing_data, label = testing_labels)
+
+# Fit the Naive Bayes Model
+NB_model <- naiveBayes(training_labels ~ ., data = train_df)
+
+# Make Predictions on Test Data
+pred_NB <- predict(NB_model, newdata = test_df)
+
+# Create a confusion matrix
+conf_Matrix <- confusionMatrix(pred_NB, testing_labels)
+
+# Display confusion matrix and accuracy 
+conf_Matrix
+accuracy <- conf_Matrix$overall["Accuracy"]
+accuracy
+```
+
+```{r}
+display_digit(digit_img[,1001:1100],pred_NB)
+```
+
+### Support Vector Machines
+
+Using the training data and labels, apply the `svm` function from the
+`e1071` package to perform support vector machine classification with a
+`radial` kernel. Evaluate the model’s performance as described above.
+
+```{r}
+testing_labels <- factor(testing_labels)
+training_labels <- factor(training_labels)
+train_df <- data.frame(training_data, label = training_labels)
+test_df <- data.frame(testing_data, label = testing_labels)
+
+# Train the SVM model
+svm_model_radial<- svm(training_labels ~ ., data =train_df, kernel = "radial", gamma = 0.007,probability=TRUE)
+
+# Predict labels
+pred_SVM <- predict(svm_model_radial, newdata = test_df)
+
+# Create a confusion matrix
+conf_Matrix <- confusionMatrix(pred_SVM, testing_labels)
+
+conf_Matrix 
+accuracy <- conf_Matrix$overall["Accuracy"]
+accuracy
+```
+
+```{r}
+display_digit(digit_img[,1001:1100],pred_SVM)
+```
+
+(iii) Which of the classifiers in part (ii) do you think is most
+      suitable for this problem? *Explain your answer. Your answer
+      should be no more than three sentences*. **(3 marks)**
+
+Given a suitable gamma value, I think the SVM is the best classification
+method for this problem because of it's capability to capture very
+complex patterns in medium to high dimension data-sets. Unlike KNN, SVM
+avoids the curse of dimensionality by leveraging support vectors to
+construct optimal hyper-planes. Although SVM has a higher complexity
+compared to Naive Bayes, its ability to maximise margin between classes
+enhances generalisation, preventing over-fitting.
