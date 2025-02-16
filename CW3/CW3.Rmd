@@ -1,5 +1,15 @@
 ---
 title: "CW3"
-output: html_document
+author: "Wen Hans Tan and Eirshad Fahim"
+date: "2025-02-30"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  markdown:
+    wrap: 72
 ---
 
+```{r}
+
+```
