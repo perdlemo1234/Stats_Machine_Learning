@@ -16,12 +16,16 @@ and perform a train-validation-test split.
 ```{r}
 library(glmnet)
 library(readr)
-Salary_Data <- read_csv("~/Stats_Machine_Learning/CW3/Salary_Data.csv")
-rowSums(is.na(Salary_Data))
+set.seed(42)
+Salary_Data <- read_csv("C:/Users/tanwe/OneDrive/Documents/Stats_Machine_Learning/CW3/Salary_Data.csv")
+any(is.na(Salary_Data))
+
+# Get shuffled indices
+indices <- sample(1:nrow(Salary_Data), nrow(Salary_Data))
 
 # Define split sizes
-train_size <- floor(0.6 * nrow(Salary_Data))  
-val_size <- floor(0.2 * nrow(Salary_Data))    
+train_size <- floor(0.5 * nrow(Salary_Data))  
+val_size <- floor(0.25 * nrow(Salary_Data))    
 test_size <- nrow(Salary_Data) - train_size - val_size 
 
 # Assign data based on exact indices
@@ -38,6 +42,7 @@ cat("Test size:", nrow(test_Data), "\n")
 (ii) **(3 marks)**
 
 ```{r}
+set.seed(42)
 my_loss <- function(lambda, train_data, valid_data) {
   #Split X and y from training and validation data 
   X_train <- as.matrix(train_data[, !names(train_data) %in% "Salary"])
@@ -61,6 +66,7 @@ my_loss <- function(lambda, train_data, valid_data) {
 (iii) **(2 marks)**
 
 ```{r}
+set.seed(42)
 sample_lambdas <- function(N) {
   #Generating N random samples from Uniform distribution [0,1]
   lambda <- runif(N, min=0, max=1)
@@ -72,6 +78,7 @@ sample_lambdas <- function(N) {
 (iv) **(3 marks)**
 
 ```{r}
+set.seed(42)
 my_kde <- function(z_values, x_values) {
   #Bandwidth
   h <- 0.1
@@ -120,9 +127,7 @@ plot(x_values, kde_estimates, main = "Kernel Density Estimate from U(0,1) sample
 (vi) **(6marks)**
 
 ```{r}
-#Set seed for reproducibality
 set.seed(42)
-
 TPE_algo <- function(train_data, valid_data, max_iter=100) {
   #Initialise with random lambda and calculate the loss 
   lambda_star = sample_lambdas(1)
@@ -148,13 +153,17 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
     }
     
     #KDE estimation for g(lambda) and b(lambda)
-    g_lambda <- my_kde(sample_lambdas[good_losses], x_values)
-    b_lambda <- my_kde(sample_lambdas[bad_losses], x_values)
-    #Ratio to minimised later
-    ratio = b_lambda/g_lambda
+    
+    optimise_function <- function(x_values) {
+      g_lambda <- my_kde(sample_lambdas[good_losses], x_values)
+      b_lambda <- my_kde(sample_lambdas[bad_losses], x_values)
+      #Ratio to minimised later
+      ratio = b_lambda/g_lambda
+      return(ratio)
+    }
     
     #Calculate new lambda star value which minimise the ratio
-    lambda_star <- sample_lambdas[which.min(ratio)]
+    lambda_star <- optimise(optimise_function, interval = c(min(x_values), max(x_values)))$minimum
     
     #Calculate new loss_z_star value 
     loss_z_star <- my_loss(lambda_star, train_data, valid_data)
@@ -167,5 +176,11 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
 (vii) **(2marks)**
 
 ```{r}
+set.seed(42)
 lambda_star <- TPE_algo(train_Data, valid_Data)
+#Calculate test mean square error
+test_mse <- my_loss(lambda_star, train_Data, test_Data)
+
+cat("Final value of lambda_star:", lambda_star, "\n")
+cat("The test MSE is:", test_mse, "\n")
 ```
