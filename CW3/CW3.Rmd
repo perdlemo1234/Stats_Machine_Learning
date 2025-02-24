@@ -11,7 +11,7 @@ editor_options:
 ---
 
 (i) **(2 marks)** Write code to read in the dataset *Salary_Data.csv*
-and perform a train-validation-test split.
+    and perform a train-validation-test split.
 
 ```{r}
 library(glmnet)
@@ -130,13 +130,13 @@ plot(x_values, kde_estimates, main = "Kernel Density Estimate from U(0,1) sample
 set.seed(42)
 TPE_algo <- function(train_data, valid_data, max_iter=100) {
   #Initialise with random lambda and calculate the loss 
-  lambda_star = sample_lambdas(1)
+  lambda_star <- runif(1, 0, 1) # Random Lambda in [0,1]
   loss_z_star = my_loss(lambda_star, train_data, valid_data)
   
   # Define evaluation points for KDE (same for both g and b)
-  x_values <- seq(0, 1, length.out = 100)
+  x_values <- seq(0, 1, length.out = 50)
   
-  for (iter in max_iter){
+  for (iter in 1:100){
     #Generate 100 ~ U[0,1]
     sample_lambdas = sample_lambdas(100)
     
@@ -147,13 +147,12 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
     good_losses <- which(losses <= loss_z_star)
     bad_losses <- which(losses > loss_z_star)
     
-    #Skip iteration if fewer than 2 values exist in either froups 
+    #Skip iteration if fewer than 2 values exist in either groups 
     if (length(good_losses) < 2 || length(bad_losses) < 2){
       next #Skip iteration
     }
     
     #KDE estimation for g(lambda) and b(lambda)
-    
     optimise_function <- function(x_values) {
       g_lambda <- my_kde(sample_lambdas[good_losses], x_values)
       b_lambda <- my_kde(sample_lambdas[bad_losses], x_values)
@@ -167,7 +166,6 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
     
     #Calculate new loss_z_star value 
     loss_z_star <- my_loss(lambda_star, train_data, valid_data)
-    
   }
   return(lambda_star)
 }
