@@ -87,14 +87,12 @@ my_kde <- function(z_values, x_values) {
   
   #Define Gaussian Kernel function
   gaussian_kernel <- function(x) {
-    return((1 / sqrt(2 * pi)) * exp(-0.5 * x^2))
+    return(dnorm(x))
   }
   
-  # Compute KDE estimates at each observable x in x_values
-  kde_estimates <- sapply(x_values, function(x) {
-    kernel_values <- gaussian_kernel((x - z_values) / h)  # Compute kernel values
-    return(sum(kernel_values) / (n * h))  # Compute density estimate  
-  })
+  #Compute KDE estimates using vectorised outer()
+  kernel_matrix <- gaussian_kernel(outer(x_values, z_values, "-") / h)
+  kde_estiamtes <- colSums(kernel_matrix / (n *h))
   
   #Array of all kde_estimates at each given x
   return(kde_estimates)
@@ -136,7 +134,7 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
   # Define evaluation points for KDE (same for both g and b)
   x_values <- seq(0, 1, length.out = 50)
   
-  for (iter in 1:100){
+  for (iter in 1:max_iter){
     #Generate 100 ~ U[0,1]
     sample_lambdas = sample_lambdas(100)
     
@@ -162,7 +160,7 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
     }
     
     #Calculate new lambda star value which minimise the ratio
-    lambda_star <- optimise(optimise_function, interval = c(min(x_values), max(x_values)))$minimum
+    lambda_star <- optimize(optimise_function, interval = c(min(x_values), max(x_values)))$minimum
     
     #Calculate new loss_z_star value 
     loss_z_star <- my_loss(lambda_star, train_data, valid_data)
