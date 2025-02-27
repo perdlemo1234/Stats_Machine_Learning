@@ -5,6 +5,7 @@ date: "2025-02-30"
 output:
   pdf_document: default
   html_document: default
+  word_document: default
 editor_options:
   markdown:
     wrap: 72
@@ -92,7 +93,7 @@ my_kde <- function(z_values, x_values) {
   
   #Compute KDE estimates using vectorised outer()
   kernel_matrix <- gaussian_kernel(outer(x_values, z_values, "-") / h)
-  kde_estiamtes <- colSums(kernel_matrix / (n *h))
+  kde_estimates <- rowSums(kernel_matrix / (n *h))
   
   #Array of all kde_estimates at each given x
   return(kde_estimates)
