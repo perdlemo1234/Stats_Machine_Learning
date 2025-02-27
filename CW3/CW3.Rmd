@@ -10,8 +10,7 @@ editor_options:
     wrap: 72
 ---
 
-(i) **(2 marks)** Write code to read in the dataset *Salary_Data.csv*
-    and perform a train-validation-test split.
+(i)  ![](images/clipboard-3348107760.png)
 
 ```{r}
 library(glmnet)
@@ -39,7 +38,7 @@ cat("Validation size:", nrow(valid_Data), "\n")
 cat("Test size:", nrow(test_Data), "\n") 
 ```
 
-(ii) **(3 marks)**
+(ii) ![](images/clipboard-2891143082.png){width="529"}
 
 ```{r}
 set.seed(42)
@@ -63,7 +62,7 @@ my_loss <- function(lambda, train_data, valid_data) {
 }
 ```
 
-(iii) **(2 marks)**
+(iii) ![](images/clipboard-3100954014.png)
 
 ```{r}
 set.seed(42)
@@ -75,7 +74,8 @@ sample_lambdas <- function(N) {
 }
 ```
 
-(iv) **(3 marks)**
+(iv) ![](images/clipboard-3930133001.png)
+(v) ![](images/clipboard-53676778.png){width="506"}
 
 ```{r}
 set.seed(42)
@@ -99,7 +99,7 @@ my_kde <- function(z_values, x_values) {
 }
 ```
 
-(v) **(2 marks)**
+![](images/clipboard-3643861216.png)
 
 ```{r}
 #Set seed for reproducibality
@@ -122,7 +122,7 @@ kde_estimates <- my_kde(z_array, x_array)
 plot(x_values, kde_estimates, main = "Kernel Density Estimate from U(0,1) sample", xlab="x", ylab="Density")
 ```
 
-(vi) **(6marks)**
+![](images/clipboard-3091009351.png)
 
 ```{r}
 set.seed(42)
@@ -169,7 +169,7 @@ TPE_algo <- function(train_data, valid_data, max_iter=100) {
 }
 ```
 
-(vii) **(2marks)**
+![](images/clipboard-1481312348.png)
 
 ```{r}
 set.seed(42)
