@@ -11,7 +11,7 @@ editor_options:
     wrap: 72
 ---
 
-(i)  ![](images/clipboard-3348107760.png)
+(i) ![](images/clipboard-3348107760.png)
 
 ```{r}
 library(glmnet)
