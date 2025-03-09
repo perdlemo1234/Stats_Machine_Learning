@@ -1,29 +1,319 @@
 ---
 title: "CW4"
-output: html_document
-date: "2025-03-08"
+author: "Wen Hans Tan and Eirshad Fahim"
+date: "2025-02-30"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+editor_options:
+  markdown:
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Problem 2: Practical (20 marks)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+library(readr)
+moons_data <- read_csv("C:/Users/tanwe/OneDrive/Documents/Stats_Machine_Learning/CW4/moons.csv")
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+colnames(moons_data)
 
-```{r cars}
-summary(cars)
+head(moons_data)
 ```
 
-## Including Plots
+(i) **{10 marks}** Load in \$ \texttt{moons.csv}\$ , and use the native
+    \$ \texttt{kmeans}\$ function in $R$ to cluster the data into
+    $K= \{ 2,3,4,5\}$ components, according to each of the following
+    loss functions :
 
-You can also embed plots, for example:
+```{r}
+#Loading necessary libraries
+library(ggplot2)
+library(gridExtra)  
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+set.seed(420)
+
+#Define K values 
+K_values <- c(2,3,4,5)
+
+#Seperate Data
+X_1 <- moons_data[,1]
+
+#List to store plots 
+plots_list <- list()
+
+#Loooping through each value
+for (k in K_values){
+  #Apply K-Means Clustering Algorithm
+  result <- kmeans(X_1, centers=k, nstart=50)
+  
+  #Store cluster assignments
+  moons_data$cluster <- as.factor(result$cluster)
+  
+  #Scatter Plot for each K-value 
+  plot <- ggplot(moons_data, aes(x= X, y= Y, color=cluster))+
+          geom_point(size=0.4) +
+          ggtitle(paste("Loss-1 Function and K=",k)) +
+          labs(x = "X", y= "Y") +
+          theme_minimal() +
+          theme(plot.margin = margin(1, 1, 1, 1, "pt"))
+  
+  #Store plot in the list 
+  plots_list[[length(plots_list) + 1]] <- plot
+}
+
+grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), height = c(3,3))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Now, using the Loss-2 Function:
+
+```{r}
+#Seperate Data
+X_2 <- moons_data[,2]
+
+#List to store plots 
+plots_list <- list()
+
+#Define K values 
+K_values <- c(2,3,4,5)
+
+#Loooping through each value
+for (k in K_values){
+  #Apply K-Means Clustering algorithm
+  result <- kmeans(X_2, centers=k, nstart=50)
+  
+  #Store cluster assignments
+  moons_data$cluster <- as.factor(result$cluster)
+  
+  #Scatter Plot for each K-value 
+  plot <- ggplot(moons_data, aes(x= X, y= Y, color=cluster))+
+          geom_point(size=0.4) +
+          ggtitle(paste("Loss-2 Function and K=",k)) +
+          labs(x = "X", y= "Y") +
+          theme_minimal() +
+          theme(plot.margin = margin(1, 1, 1, 1, "pt"))
+  
+  #Store plot in the list 
+  plots_list[[length(plots_list) + 1]] <- plot
+}
+
+grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), height = c(3,3))
+```
+
+Now, using the Loss-3 Function, where the full feature vector is
+utilised:
+
+```{r}
+#List to store plots 
+plots_list <- list()
+
+#Define K values 
+K_values <- c(2,3,4,5)
+
+#Loooping through each value
+for (k in K_values){
+  #Apply K-Means Clustering Algorithm
+  result <- kmeans(moons_data, centers=k, nstart=50)
+  
+  #Store cluster assignments
+  moons_data$cluster <- as.factor(result$cluster)
+  
+  #Scatter Plot for each K-value 
+  plot <- ggplot(moons_data, aes(x= X, y= Y, color=cluster))+
+          geom_point(size=0.4) +
+          ggtitle(paste("Loss-3 Function and K=",k)) +
+          labs(x = "X", y= "Y") +
+          theme_minimal() +
+          theme(plot.margin = margin(1, 1, 1, 1, "pt"))
+  
+  #Store plot in the list 
+  plots_list[[length(plots_list) + 1]] <- plot
+}
+
+grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), heights = c(3,3))
+```
+
+Now, we use the last loss function, where there is transformation:
+
+```{r}
+#List to store plots 
+plots_list <- list()
+
+#Define K values 
+K_values <- c(2,3,4,5)
+
+#Transform Function
+transform_to_g <- function(x1,x2) {
+  g_x1 <- sqrt((x1 + 1/2)^2 + x2^2)
+  g_x2 <- sqrt((x1 - 1/2)^2 + x2^2)
+  return(c(g_x1, g_x2))
+}
+
+# Apply the transformation using sapply()
+transformed_data <- as.data.frame(t(sapply(1:nrow(moons_data), 
+                                           function(i) transform_to_g(moons_data[i,1], moons_data[i,2]))))
+
+#Set new column names 
+colnames(transformed_data) <- c("gx1", "gx2")
+
+#Convert into numeric data
+transformed_data$gx1 <- as.numeric(transformed_data$gx1)
+transformed_data$gx2 <- as.numeric(transformed_data$gx2)
+
+#Loooping through each value
+for (k in K_values){
+  #Apply K-Means Clustering Algorithm
+  result <- kmeans(transformed_data, centers=k, nstart=50)
+  
+  #Store cluster assignments
+  transformed_data$cluster <- as.factor(result$cluster)
+  
+  #Scatter Plot for each K-value 
+  plot <- ggplot(transformed_data, aes(x= gx1, y= gx2, color=cluster))+
+          geom_point(size=0.4) +
+          ggtitle(paste("Loss-4 Function and K=",k)) +
+          labs(x = "g(x1)", y= "g(x2)") +
+          theme_minimal() +
+          theme(plot.margin = margin(1, 1, 1, 1, "pt"))
+  
+  #Store plot in the list 
+  plots_list[[length(plots_list) + 1]] <- plot
+}
+
+grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), heights = c(3,3))
+```
+
+(ii) **( 5 marks )** Write a function $\verb|cluster_eval|$ which, for a
+     given data set $X$ and a range of natural numbers
+     $K_{1} \leq K_{2}$ ,
+     -   Computes the $K$-Means clusterings for each
+         $K_{1} \leq K \leq K_{2}$ , and
+     -   Given this collection of clusterings, plots the values of the
+         $K$-Means loss function at the optimal clusterings, as a
+         function of $K$.
+
+Use your implementation of $\verb|cluster_eval|$ to compare the
+clusterings which you obtained in Part (i) of this problem. Do you find
+that you different clusterings agree on what the 'correct' number of
+clusters in this data are? **):**
+
+```{r}
+library(ggplot2)
+
+cluster_eval <- function(data, K1, K2){
+  #Create empty numeric vector to store the WCSS
+  wcss_value <- numeric(length = K2 - K1 + 1)
+  
+  #Loop values from K1 to K2
+  for (k in K1:K2){
+    #Apply k-means algorithm
+    result <- kmeans(data, centers=k, nstart = 50)
+    
+    #Store the WCSS
+    wcss_value[k - K1 + 1] <- result$tot.withinss
+  }
+  
+  wcss_df <- data.frame(K = K1:K2, WCSS= wcss_value)
+  
+  ggplot(wcss_df, aes(x= K, y= WCSS))+
+          geom_line(color="black") +
+          geom_point(size=1.5, color="red") +
+          ggtitle("K-Means Loss Function") +
+          labs(x = "K", y= "Within Cluster Sum of Squares (WCSS)") +
+          theme_minimal() 
+}
+
+#Use cluster_eval function
+cluster_eval(moons_data, 2, 16)
+```
+
+In this case, we use the entire set of features to be part of the loss
+function. We can examine the elbow point in the plot ; it looks like the
+optimal value of $K$ is either 4 or 5. From part (i), depending on the
+loss function, we can inspect visually what the optimal value of K could
+be. In my opinion, these are the optimal values of K for each function:
+
+-   $Loss^{1}$ : K=3
+
+-   $Loss^{2}$ : K= 4
+
+-   $Loss^{3}$ : K = 4
+
+-   $Loss^{4}$ : K= 4
+
+Again, these are completely subjective to each person. Since most of the
+"correct" cluster number is 4, it agrees with the elbow method that the
+choice of $K=4$ is more or less correct.
+
+iii\. **( 5 marks )**Load in R’s quakes dataset. This dataset stores
+information about 1000 seismic events (i.e. earthquakes and similar)
+which have occurred in the vicinity of the island of Fiji over the past
+60 or so years. The first three columns (lat, long, depth) record the
+geographical location of the event, the fourth (mag) records the
+strength of the event (as measured on the Richter scale), and the the
+fifth (station) records how
+many stations documented the event in question.
+
+In the context of this question, we are interested in whether the
+locations
+at which these seismic events take place are spatially localised, i.e.
+if they
+cluster around specific areas of the island.
+
+-   Run a standard K-Means clustering on the full data set for $K =
+    \{2, 3, 4, 5 \}$, and plot the outcome, focusing on the
+    $\texttt{lat}$ and $\texttt{long}$ dimensions.
+
+-   Does the clustering which you obtain in this way look spatially
+    reasonable? Propose an alternative approach to obtaining a
+    clustering
+    which is more coherent (still using K-Means).
+
+```{r}
+data("quakes")
+
+#List to store plots 
+plots_list <- list()
+
+#Define K values 
+K_values <- c(2,3,4,5)
+
+#Loooping through each value
+for (k in K_values){
+  #Apply K-Means Clustering Algorithm
+  result <- kmeans(quakes, centers=k, nstart=50)
+  
+  #Store cluster assignments
+  quakes$cluster <- as.factor(result$cluster)
+  
+  #Scatter Plot for each K-value 
+  plot <- ggplot(quakes, aes(x= lat, y= long, color=cluster))+
+          geom_point(size=0.4) +
+          ggtitle(paste("Full Data K-Means & K=",k)) +
+          labs(x = "Latitude", y= "Longitude") +
+          theme_minimal() +
+          theme(plot.margin = margin(1, 1, 1, 1, "pt"))
+  
+  #Store plot in the list 
+  plots_list[[length(plots_list) + 1]] <- plot
+}
+
+grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), heights = c(3,3))
+```
+
+For $K=2$, the clusters are well seperated but there are some
+overlapping points ; overall, it looks spatially reasonable. As the
+number of clusters increase, they appear more fragmented and
+artificially split, especially for $K \in \{4,5 \}$ . An alternative
+approach while still using K-Means will be to normalise selected
+features which are on a different scale before clustering, as it
+prevents features with large magnitudes to dominate the learning
+process. Also, PCA would be another suggestion if the features are
+highly correlated, but it ***may*** not be necessary since
+$\texttt{quakes}$ has 5 features which may contain important
+information.
