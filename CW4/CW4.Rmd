@@ -256,14 +256,12 @@ which have occurred in the vicinity of the island of Fiji over the past
 60 or so years. The first three columns (lat, long, depth) record the
 geographical location of the event, the fourth (mag) records the
 strength of the event (as measured on the Richter scale), and the the
-fifth (station) records how
-many stations documented the event in question.
+fifth (station) records how many stations documented the event in
+question.
 
 In the context of this question, we are interested in whether the
-locations
-at which these seismic events take place are spatially localised, i.e.
-if they
-cluster around specific areas of the island.
+locations at which these seismic events take place are spatially
+localised, i.e. if they cluster around specific areas of the island.
 
 -   Run a standard K-Means clustering on the full data set for $K =
     \{2, 3, 4, 5 \}$, and plot the outcome, focusing on the
@@ -271,11 +269,11 @@ cluster around specific areas of the island.
 
 -   Does the clustering which you obtain in this way look spatially
     reasonable? Propose an alternative approach to obtaining a
-    clustering
-    which is more coherent (still using K-Means).
+    clustering which is more coherent (still using K-Means).
 
 ```{r}
 data("quakes")
+head(quakes)
 
 #List to store plots 
 plots_list <- list()
@@ -310,10 +308,7 @@ For $K=2$, the clusters are well seperated but there are some
 overlapping points ; overall, it looks spatially reasonable. As the
 number of clusters increase, they appear more fragmented and
 artificially split, especially for $K \in \{4,5 \}$ . An alternative
-approach while still using K-Means will be to normalise selected
+approach while still using K-Means will be to transform selected
 features which are on a different scale before clustering, as it
 prevents features with large magnitudes to dominate the learning
-process. Also, PCA would be another suggestion if the features are
-highly correlated, but it ***may*** not be necessary since
-$\texttt{quakes}$ has 5 features which may contain important
-information.
+process.
