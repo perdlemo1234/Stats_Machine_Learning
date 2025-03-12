@@ -351,3 +351,35 @@ approach while still using K-Means will be to do k-means with only
 $\texttt{lat}$ and $\texttt{long}$ , as including the other features
 does not help in finding whether location of the seismic events are
 *spatially localised.*
+
+```{r}
+#List to store plots 
+plots_list <- list()
+
+#Chooses lat and long only
+quakes_clean <- subset(quakes, select = -c(depth, mag, stations))
+
+#Loooping through each value
+for (k in K_values){
+  #Apply K-Means Clustering Algorithm
+  result <- kmeans(quakes_clean, centers=k, nstart=50)
+  
+  #Store cluster assignments
+  quakes_clean$cluster <- as.factor(result$cluster)
+  
+  #Scatter Plot for each K-value 
+  plot <- ggplot(quakes_clean, aes(x= lat, y= long, color=cluster))+
+          geom_point(size=0.4) +
+          ggtitle(paste("Full Data K-Means & K=",k)) +
+          labs(x = "Latitude", y= "Longitude") +
+          theme_minimal() +
+          theme(plot.margin = margin(1, 1, 1, 1, "pt"))
+  
+  #Store plot in the list 
+  plots_list[[length(plots_list) + 1]] <- plot
+}
+
+grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), heights = c(3,3))
+```
+
+Now, it looks spatially localised! Clusters are more identifiable!
