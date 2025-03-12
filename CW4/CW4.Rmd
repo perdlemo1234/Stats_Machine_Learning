@@ -138,7 +138,7 @@ for (k in K_values){
 grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3,3), heights = c(3,3))
 ```
 
-Now, we use the last loss function, where there is transformation:
+Now, we use the last loss function, where there is a transformation:
 
 ```{r}
 #List to store plots 
@@ -205,38 +205,77 @@ clusters in this data are? **):**
 ```{r}
 library(ggplot2)
 
-cluster_eval <- function(data, K1, K2){
-  #Create empty numeric vector to store the WCSS
-  wcss_value <- numeric(length = K2 - K1 + 1)
+cluster_eval <- function(K1, K2){
+  #Create empty list to store plots 
+  plots_list <- list()
+  
+  # Create empty numeric vectors to store WCSS
+  wcss_values <- list(
+    wcss_value_1 = numeric(length = K2 - K1 + 1),
+    wcss_value_2 = numeric(length = K2 - K1 + 1),
+    wcss_value_3 = numeric(length = K2 - K1 + 1),
+    wcss_value_4 = numeric(length = K2 - K1 + 1)
+  )
   
   #Loop values from K1 to K2
   for (k in K1:K2){
-    #Apply k-means algorithm
-    result <- kmeans(data, centers=k, nstart = 50)
     
-    #Store the WCSS
-    wcss_value[k - K1 + 1] <- result$tot.withinss
+    #Apply k-means algorithm to all clusterings
+    result_loss_1 <-kmeans(X_1, centers=k, nstart = 50)
+    result_loss_2 <- kmeans(X_2, centers=k, nstart = 50)
+    result_loss_3 <- kmeans(moons_data, centers=k, nstart = 50)
+    result_loss_4 <- kmeans(transformed_data, centers=k, nstart = 50)
+    
+    #Store the WCSS values
+    wcss_values$wcss_value_1[k - K1 + 1] <- result_loss_1$tot.withinss
+    wcss_values$wcss_value_2[k - K1 + 1] <- result_loss_2$tot.withinss
+    wcss_values$wcss_value_3[k - K1 + 1] <- result_loss_3$tot.withinss
+    wcss_values$wcss_value_4[k - K1 + 1] <- result_loss_4$tot.withinss
   }
   
-  wcss_df <- data.frame(K = K1:K2, WCSS= wcss_value)
+  # Create individual plots for each dataset
+  datasets <- list("X_1" = wcss_values$wcss_value_1, 
+                   "X_2" = wcss_values$wcss_value_2,
+                   "moons_data" = wcss_values$wcss_value_3, 
+                   "transformed_data" = wcss_values$wcss_value_4)
   
-  ggplot(wcss_df, aes(x= K, y= WCSS))+
-          geom_line(color="black") +
-          geom_point(size=1.5, color="red") +
-          ggtitle("K-Means Loss Function") +
-          labs(x = "K", y= "Within Cluster Sum of Squares (WCSS)") +
-          theme_minimal() 
+  for (i in seq_along(datasets)) {
+    wcss_df <- data.frame(K = K1:K2, WCSS = datasets[[i]])
+    
+    plot <- ggplot(wcss_df, aes(x = K, y = WCSS)) +
+      geom_line(color = "black") +
+      geom_point(size = 1.5, color = "red") +
+      ggtitle(paste("WCSS for", names(datasets)[i])) +
+      labs(x = "K", y = "(WCSS)") +
+      theme_minimal()
+    
+    # Store each plot in the list
+    plots_list[[i]] <- plot
+  }
+  
+  #Arrange plots in a 2x2 grid
+  grid.arrange(grobs = plots_list, nrow = 2, ncol = 2, widths = c(3, 3), heights = c(3, 3))
 }
 
 #Use cluster_eval function
-cluster_eval(moons_data, 2, 16)
+cluster_eval(2, 16)
 ```
 
-In this case, we use the entire set of features to be part of the loss
-function. We can examine the elbow point in the plot ; it looks like the
-optimal value of $K$ is either 4 or 5. From part (i), depending on the
-loss function, we can inspect visually what the optimal value of K could
-be. In my opinion, these are the optimal values of K for each function:
+We plotted the WCSS function against k for all types of loss function.
+We can examine the elbow point in the plot ; it looks like the optimal
+value of $K$ for their respective loss functions are:
+
+-   $Loss^{1}$ : K= 4
+
+-   $Loss^{2}$ : K= 4
+
+-   $Loss^{3}$ : K = 5
+
+-   $Loss^{4}$ : K= 5
+
+From part (i), depending on the loss function, we can inspect
+**visually** what the optimal value of K could be. In my opinion, these
+are the optimal values of K for each function:
 
 -   $Loss^{1}$ : K=3
 
@@ -247,8 +286,8 @@ be. In my opinion, these are the optimal values of K for each function:
 -   $Loss^{4}$ : K= 4
 
 Again, these are completely subjective to each person. Since most of the
-"correct" cluster number is 4, it agrees with the elbow method that the
-choice of $K=4$ is more or less correct.
+"correct" cluster number is differs at most by 1, choices of $K$ chosen
+using the elbow method is more or less correct.
 
 iii\. **( 5 marks )**Load in R’s quakes dataset. This dataset stores
 information about 1000 seismic events (i.e. earthquakes and similar)
@@ -308,7 +347,7 @@ For $K=2$, the clusters are well seperated but there are some
 overlapping points ; overall, it looks spatially reasonable. As the
 number of clusters increase, they appear more fragmented and
 artificially split, especially for $K \in \{4,5 \}$ . An alternative
-approach while still using K-Means will be to transform selected
-features which are on a different scale before clustering, as it
-prevents features with large magnitudes to dominate the learning
-process.
+approach while still using K-Means will be to do k-means with only
+$\texttt{lat}$ and $\texttt{long}$ , as including the other features
+does not help in finding whether location of the seismic events are
+*spatially localised.*
